@@ -12,7 +12,6 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -64,8 +63,6 @@ public class ScreenSaverActivity extends AppCompatActivity {
     Button mBtnEnter;
     @BindView(R.id.bg_view)
     View mBgView;
-    @BindView(R.id.bg_view2)
-    View mBgView2;
     @OnClick({R.id.btn_enter})
     void onClick(View view){
         switch (view.getId()) {
@@ -116,15 +113,14 @@ public class ScreenSaverActivity extends AppCompatActivity {
             dialogInterface.dismiss();
         }
     };
-    private int a = 0;
+    private int mTimerMarker = 0;
     private long millisTime;
     private boolean isFinal = false;
     private List<String> otherUserList = new ArrayList<>();
     private List<String> otherBlackList = new ArrayList<>();
     private AppsAdapter mAppsAdapter;
     private AppsOthersAdapter mAppotherAdapter;
-    private HomeWatcher.OnHomePressedListener homePressedListener
-            = new HomeWatcher.OnHomePressedListener() {
+    private HomeWatcher.OnHomePressedListener homePressedListener = new HomeWatcher.OnHomePressedListener() {
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public void onHomePressed() {
@@ -199,7 +195,7 @@ public class ScreenSaverActivity extends AppCompatActivity {
             int minutes = (int) (secondsInFuture/60);
             txvSaverTime.setText(String.format("%2d:%2d",minutes,seconds));
             millisTime -= 1000;
-            wldProgress.setProgressValue(a++);
+            wldProgress.setProgressValue(mTimerMarker++);
         }
 
         @Override
@@ -443,6 +439,20 @@ public class ScreenSaverActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mAppotherAdapter);
         mBtnEnter.setVisibility(View.VISIBLE);
         mBtnEnter.bringToFront();
+    }
+    //通过百分比设置
+    private long setWaveLoadingAnimation(int pickHour,int pickMinute){
+        long millis = pickMinute*60 + pickHour*3600;
+        CountDownTimer countDownTimer = new CountDownTimer(millis,1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                int progress = (int) (mTimerMarker++/millis);
+                wldProgress.setProgressValue(progress);
+            }
+            @Override
+            public void onFinish() {
+            }
+        };
     }
 
 }
