@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">JoinMe</string>
+    <string name="user_marker">com.muxistudio.usermaker</string>
+    <string name="add_task">+ 新建任务</string>
+    <string name="txv_ahead">发起学习</string>
+    <string name="txv_task_eg">学习记录</string>
+    <string name="btn_pause">暂停</string>
+    <string name="btn_end">结束</string>
+    <string name="txv_time_eg">00 : 00</string>
+    <string name="txv_during">中</string>
+    <string name="btn_enter">完成</string>
+    <string name="btn_cancel">取消</string>
+    <string name="txv_ban">这些应用被禁用了 -></string>
+    <string name="txv_ban_others">请选择对方禁用的应用</string>
+    <string name="txv_task">任务</string>
+    <string name="edt_edit">编辑任务名称</string>
+    <string name="txv_ex">高数复习</string>
+</resources>

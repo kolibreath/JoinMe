@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize">
+
+    <android.support.v7.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorDarkTheme">
+
+        <ImageView
+            android:src="@drawable/ic_record"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginStart="14dp"/>
+        <TextView
+            android:text="@string/txv_task_eg"
+            android:textSize="18sp"
+            android:textColor="@color/colorWhite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp"/>
+
+    </android.support.v7.widget.Toolbar>
+
+</RelativeLayout>
