@@ -11,18 +11,15 @@
         android:layout_height="180dp"
         android:layout_centerInParent="true"
         android:elevation="2dp"
-        android:translationZ="2dp" />
+        android:translationZ="2dp"
+        />
 
     <me.itangqi.waveloadingview.WaveLoadingView
         android:id="@+id/wld_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         app:wlv_shapeType="rectangle"
-        app:wlv_waveColor="@color/colorTheme" />
-
+        app:wlv_waveColor="@color/colorTheme"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
     <TextView
         android:id="@+id/txv_saver_time"
         tools:text="@string/txv_time_eg"
@@ -32,8 +29,36 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:elevation="2dp"
-        android:translationZ="2dp" />
-
+        android:translationZ="2dp"
+        />
+    <!--
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txv_saver_time"
+        android:layout_marginTop="16dp"
+        android:layout_centerHorizontal="true"
+        android:elevation="2dp"
+        android:translationZ="2dp">
+        <TextView
+            android:id="@+id/txv_saver_task"
+            android:text="@string/txv_task_eg"
+            android:textSize="14sp"
+            android:textColor="@color/colorBlack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+        <TextView
+            android:text="@string/txv_during"
+            android:textSize="14sp"
+            android:textColor="@color/colorBlack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/txv_saver_task"
+            android:layout_toEndOf="@+id/txv_saver_task"
+            />
+    </RelativeLayout>
+    -->
     <LinearLayout
         android:id="@+id/layout_btn"
         android:orientation="horizontal"
@@ -51,7 +76,8 @@
             android:background="@color/colorDarkTheme"
             android:layout_width="0dp"
             android:layout_height="54dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            />
 
         <View
             android:background="@color/colorTrans"
@@ -67,22 +93,59 @@
             android:background="@color/colorDarkTheme"
             android:layout_width="0dp"
             android:layout_height="54dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            />
 
     </LinearLayout>
 
+    <!--
+
+    <View
+        android:id="@+id/bg_view2"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="67dp"
+        android:layout_alignBottom="@+id/rv_app_list"
+        android:background="@color/colorWhite"
+        android:elevation="3dp"
+        android:translationZ="3dp"/>
+
     <Button
         android:id="@+id/btn_enter"
-        android:visibility="gone"
         android:textColor="@color/colorWhite"
         android:textSize="16sp"
+        android:visibility="gone"
         android:text="@string/btn_enter"
         android:background="@color/colorDarkTheme"
         android:layout_marginLeft="270dp"
         android:layout_marginStart="270dp"
-        android:layout_marginTop="440dp"
+        android:layout_alignBottom="@+id/rv_app_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/btn_other_enter"
+        android:textColor="@color/colorWhite"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:text="@string/btn_enter"
+        android:background="@color/colorDarkTheme"
+        android:layout_marginLeft="270dp"
+        android:layout_marginStart="270dp"
+        android:layout_alignBottom="@+id/rv_app_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_app_list"
+        android:visibility="gone"
+        android:translationZ="10dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="82dp"
+        android:layout_marginBottom="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </android.support.v7.widget.RecyclerView>
 
     <View
         android:id="@+id/bg_view"
@@ -90,4 +153,7 @@
         android:background="@color/colorWhite"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+        -->
 </RelativeLayout>
+
+
