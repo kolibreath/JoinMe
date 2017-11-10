@@ -4,11 +4,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,7 +17,9 @@ import android.widget.TextView;
 
 import com.joinme.adapter.AppsAdapter;
 import com.joinme.adapter.AppsOthersAdapter;
+import com.joinme.appChoosingView.BannedAppChoosingDialog;
 import com.joinme.miscellaneous.App;
+import com.joinme.miscellaneous.MyTimer;
 import com.joinme.model.AppInfos;
 import com.joinme.model.AppPick;
 import com.joinme.model.AppPicker;
@@ -46,19 +46,24 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
+import static android.R.attr.keycode;
+
 /**
- * Edited by kolibreath on 2017/11/5.
+ * Created by lwxwl on 2017/10/21.
  */
 
 public class ScreenSaverActivity extends AppCompatActivity {
     @BindView(R.id.txv_saver_time)
     TextView txvSaverTime;
+    //@BindView(R.id.txv_saver_task)
+    //TextView txvSaverTask;
     @BindView(R.id.btn_saver_pause)
     Button btnSaverPause;
     @BindView(R.id.btn_saver_end)
     Button btnSaverEnd;
     @BindView(R.id.wld_view)
     WaveLoadingView wldProgress;
+<<<<<<< HEAD
     @BindView(R.id.btn_enter)
     Button mBtnEnter;
     @BindView(R.id.bg_view)
@@ -102,29 +107,59 @@ public class ScreenSaverActivity extends AppCompatActivity {
                 mHomeWatcher.setOnHomePressedListener(homePressedListener);
                 */
                 break;
+=======
+    //@BindView(R.id.rv_app_list)
+    //RecyclerView mRecyclerView;
+    //@BindView(R.id.btn_enter)
+    //Button mBtnEnter;
+    //@BindView(R.id.bg_view)
+    //View mBgView;
+    //@BindView(R.id.bg_view2)
+    //View mBgView2;
+    //@OnClick({R.id.btn_enter})
+    //void onClick(View view){
+     //   switch (view.getId()) {
+     //       case R.id.btn_enter:
+                //mRecyclerView.setVisibility(View.GONE);
+                //mBgView.setVisibility(View.GONE);
+                //mBgView2.setVisibility(View.GONE);
+    //            transModifiedList();
+    //            initRecyclerView(App.pylist);
+    //            break;
+>>>>>>> e496f588456bbdda6ed2efdc5d0c390fff5e5d72
             //case R.id.btn_ban_cancel:
             //    mRecyclerView.setVisibility(View.GONE);
-             //   break;
-        }
-    }
+            //   break;
+    //    }
+    //}
+
     private AlertDialogUtils.OnPostiveListener otherListListener = new AlertDialogUtils.OnPostiveListener() {
         @Override
         public void onClick(DialogInterface dialogInterface, int i) {
             dialogInterface.dismiss();
+
         }
     };
+<<<<<<< HEAD
     private int mTimerMarker = 0;
     private long millisTime;
+=======
+>>>>>>> e496f588456bbdda6ed2efdc5d0c390fff5e5d72
     private boolean isFinal = false;
     private List<String> otherUserList = new ArrayList<>();
     private List<String> otherBlackList = new ArrayList<>();
     private AppsAdapter mAppsAdapter;
     private AppsOthersAdapter mAppotherAdapter;
+<<<<<<< HEAD
     private HomeWatcher.OnHomePressedListener homePressedListener = new HomeWatcher.OnHomePressedListener() {
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+=======
+    private HomeWatcher.OnHomePressedListener homePressedListener
+            = new HomeWatcher.OnHomePressedListener() {
+>>>>>>> e496f588456bbdda6ed2efdc5d0c390fff5e5d72
         @Override
         public void onHomePressed() {
-            RogueUtils.startRoit(ScreenSaverActivity.this,App.pylist);
+            App.UNLOCKTIMES++;
         }
 
         @Override
@@ -136,13 +171,12 @@ public class ScreenSaverActivity extends AppCompatActivity {
     private ScreenWatcher.ScreenListener mScreenListener = new ScreenWatcher.ScreenListener() {
         @Override
         public void onUnlock() {
-            App.UNLOCKTIMES++;
             RogueUtils.excuteScreenLocker("ScreenSaverActivity");
         }
     };
     private boolean isAdded = false;
     private boolean isReceiveRecord = false;
-    private CountDownTimer isModifyTimer = new CountDownTimer(millisTime, 200) {
+    private CountDownTimer isModifyTimer = new CountDownTimer(120000, 200) {
         @Override
         public void onTick(long l) {
             if (!isFinal) {
@@ -187,8 +221,10 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
         }
     };
-    private CountDownTimer studyTimer           = new CountDownTimer(120000,1000) {
+    private MyTimer studyTimer;
+    private MyTimer.TimerListener timerListener = new MyTimer.TimerListener() {
         @Override
+<<<<<<< HEAD
         public void onTick(long l) {
             long secondsInFuture = millisTime/1000;
             int seconds = (int) (secondsInFuture%60);
@@ -196,10 +232,14 @@ public class ScreenSaverActivity extends AppCompatActivity {
             txvSaverTime.setText(String.format("%2d:%2d",minutes,seconds));
             millisTime -= 1000;
             wldProgress.setProgressValue(mTimerMarker++);
+=======
+        public void onTimerTick() {
+            txvSaverTime.setText(studyTimer.getText(studyTimer.getMillisInFuture()));
+>>>>>>> e496f588456bbdda6ed2efdc5d0c390fff5e5d72
         }
 
         @Override
-        public void onFinish() {
+        public void onTimerFinish() {
 
         }
     };
@@ -225,12 +265,6 @@ public class ScreenSaverActivity extends AppCompatActivity {
             case R.id.btn_saver_end:
                 break;
         }
-    }
-
-    @Override
-    protected void onPause() {
-        RogueUtils.startRoit(this,App.pylist);
-        super.onPause();
     }
 
     @Override
@@ -316,7 +350,6 @@ public class ScreenSaverActivity extends AppCompatActivity {
                         isAddedTimer.cancel();
                         String apps = appPick.getApps();
                         otherUserList = parseString(apps);
-                        mBtnEnter.setVisibility(View.VISIBLE);
                         initListView();
                     }
                 });
@@ -345,16 +378,16 @@ public class ScreenSaverActivity extends AppCompatActivity {
                     public void onNext(AppPicker appPicker) {
                         isFinal = true;
                         isModifyTimer.cancel();
-                   //     initRecyclerView(appPicker.getApps());
-                 //       mRlayoutApps.setVisibility(View.VISIBLE);
+                        //     initRecyclerView(appPicker.getApps());
+                        //       mRlayoutApps.setVisibility(View.VISIBLE);
                         //等待对方确定了之后 才开始轮训
                         long millis = (pickHour * 3600 + pickMinute * 60) * 1000;
                         wldProgress.setAnimDuration(millis);
                         //倒计时
-                        //studyTimer = new MyTimer(millis, 1000);
-                   //     studyTimer.setTimerListener(timerListener);
-                     //   studyTimer.onTick(1000);
-                       // studyTimer.onFinish();
+                        studyTimer = new MyTimer(millis, 1000);
+                        studyTimer.setTimerListener(timerListener);
+                        studyTimer.onTick(1000);
+                        studyTimer.onFinish();
                         mHomeWatcher.startWatch();
                         mHomeWatcher.setOnHomePressedListener(homePressedListener);
                     }
@@ -385,22 +418,18 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode==KeyEvent.KEYCODE_BACK){
+        switch (keycode) {
+            case KeyEvent.KEYCODE_BACK:
                 AlertDialogUtils.show(ScreenSaverActivity.this, btnSaverEnd);
-                return false;
-        }
-        if(keyCode==KeyEvent.KEYCODE_MENU){
-            Intent i = new Intent(Intent.ACTION_VIEW);
-            i.setClassName(App.sAppPackagename,App.sAppPackagename+"."+"ScreenSaverActivity");
-            App.getContext().startActivity(i);
-            return true;
+                break;
+            case KeyEvent.KEYCODE_MENU:
+                RogueUtils.excuteScreenLocker("ScreenSaverActivity");
+                break;
         }
         return super.onKeyDown(keyCode, event);
     }
 
     private void initRecyclerView(List<String> blackList) {
-        btnFinalEnter.bringToFront();
-        btnFinalEnter.setVisibility(View.VISIBLE);
         List<AppInfos> appInfoList = AppInfoUtils.getAppInfos();
         List<String> appLabelList = new ArrayList<>();
         List<Drawable> appDrawableList = new ArrayList<>();
@@ -409,21 +438,20 @@ public class ScreenSaverActivity extends AppCompatActivity {
             appDrawableList.add(appInfoList.get(i).getIcon());
         }
         List<AppInfos> whiteList = new ArrayList<>();
-        for (int i = 0; i < blackList.size(); i++) {
+        for (int i = 0; i < appLabelList.size(); i++) {
             if (!appLabelList.contains(blackList.get(i))) {
                 whiteList.add(new AppInfos(appDrawableList.get(i), appLabelList.get(i)));
             }
         }
-        for(int i=blackList.size()-1;i<appDrawableList.size();i++){
-            whiteList.add(new AppInfos(appDrawableList.get(i), appLabelList.get(i)));
-        }
         GridLayoutManager manager = new GridLayoutManager(this,3);
         mAppsAdapter = new AppsAdapter(this,whiteList);
-        mRecyclerView.setAdapter(mAppsAdapter);
-        mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setVisibility(View.VISIBLE);
-        mBgView.setVisibility(View.VISIBLE);
-        mBgView2.setVisibility(View.VISIBLE);
+        //mRecyclerView.setAdapter(mAppsAdapter);
+        //mRecyclerView.setLayoutManager(manager);
+        //mRecyclerView.setVisibility(View.VISIBLE);
+        //mBgView.setVisibility(View.VISIBLE);
+        //mBgView2.setVisibility(View.VISIBLE);
+        BannedAppChoosingDialog dialog = new BannedAppChoosingDialog();
+        dialog.show(getSupportFragmentManager(),"app_chooing_dialog");
     }
 
     private void initListView() {
@@ -431,15 +459,34 @@ public class ScreenSaverActivity extends AppCompatActivity {
         List<String> blackList = mAppotherAdapter.getBlackList();
         otherBlackList = blackList;
         LinearLayoutManager manager = new LinearLayoutManager(this);
-        mRecyclerView.setVisibility(View.VISIBLE);
-        mRecyclerView.bringToFront();
-        mBgView.setVisibility(View.VISIBLE);
-        mBgView2.setVisibility(View.VISIBLE);
-        mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setAdapter(mAppotherAdapter);
-        mBtnEnter.setVisibility(View.VISIBLE);
-        mBtnEnter.bringToFront();
+        //mRecyclerView.setVisibility(View.VISIBLE);
+        //mBgView.setVisibility(View.VISIBLE);
+        //mBgView2.setVisibility(View.VISIBLE);
+        //mRecyclerView.setLayoutManager(manager);
+        //mRecyclerView.setAdapter(mAppotherAdapter);
+        //mBtnEnter.setVisibility(View.VISIBLE);
+        //mBtnEnter.bringToFront();
+        BannedAppChoosingDialog dialog = new BannedAppChoosingDialog();
+        dialog.show(getSupportFragmentManager(),"app_chooing_dialog");
     }
+    private List<String> parseString(String json){
+        String apps[] = json.split(",");
+        List<String> applist = new ArrayList<>();
+        for(int i=0;i<apps.length;i++){
+            if(i==0){
+                String temp = apps[i].substring(2,apps[i].length()-2);
+                applist.add(temp);
+            }
+            if(i==apps.length-1){
+                String temp = apps[i].substring(1,apps[i].length()-3);
+                applist.add(temp);
+            }
+            String temp = apps[i].substring(2,apps[i].length()-1);
+            applist.add(temp);
+        }
+        return applist;
+    }
+<<<<<<< HEAD
     //通过百分比设置
     private long setWaveLoadingAnimation(int pickHour,int pickMinute){
         long millis = pickMinute*60 + pickHour*3600;
@@ -455,4 +502,6 @@ public class ScreenSaverActivity extends AppCompatActivity {
         };
     }
 
+=======
+>>>>>>> e496f588456bbdda6ed2efdc5d0c390fff5e5d72
 }
