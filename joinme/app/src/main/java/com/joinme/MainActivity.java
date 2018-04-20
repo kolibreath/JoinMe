@@ -2,7 +2,6 @@ package com.joinme;
 
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -33,19 +32,21 @@ import rx.schedulers.Schedulers;
 public class MainActivity extends AppCompatActivity {
     private boolean isAccepted = false;
     private int pickMinute,pickHour ;
-    private CountDownTimer checkAcceptedTimer = new CountDownTimer(60000,2000) {
-        @Override
-        public void onTick(long l) {
-            if (!isAccepted){
-                checkIsAccepted();
-            }else{
-                checkAcceptedTimer.cancel();
-            }
-        }
-        @Override
-        public void onFinish() {
-        }
-    };
+    private int mInterval = 300;
+//    private CountDownTimer checkAcceptedTimer = new CountDownTimer(60000,2000) {
+//        @Override
+//        public void onTick(long l) {
+//            if (!isAccepted){
+//                checkIsAccepted();
+//            }else{
+//                checkAcceptedTimer.cancel();
+//            }
+//        }
+//        @Override
+//        public void onFinish() {
+//        }
+//    };
+    private RxJavaTask mRxJavaTask =  new RxJavaTask(mInterval, o -> checkIsAccepted());
     @BindView(R.id.btn_raise_study)
     ImageButton mBtnRaiseStudy;
     @OnClick({R.id.btn_raise_study})
@@ -113,7 +114,9 @@ public class MainActivity extends AppCompatActivity {
                 .postRaise(new RaiserInfo(raiserId, timeString))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(status -> {checkAcceptedTimer.start();},Throwable::printStackTrace,()->{});
+                .subscribe(status -> {
+                   mRxJavaTask.start();
+                    },Throwable::printStackTrace,()->{});
     }
     //接受者检查口令 然后表示接受
     //一旦接受之后就会进入ScreenSaver
@@ -148,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(status -> {
                             isAccepted = true;
-                            checkAcceptedTimer.cancel();
+                            mRxJavaTask.stop();
                             ScreenSaverActivity.start(MainActivity.this, pickHour,pickMinute);
                         },e->{int code = NetWorkUtils.getresponseCode(e);
                             if(code==404){
