@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 //        public void onFinish() {
 //        }
 //    };
-    private RxJavaTask mRxJavaTask =  new RxJavaTask(mInterval, o -> checkIsAccepted());
+    private RxTask mRxJavaTask =  new RxTask(mInterval, o -> checkIsAccepted());
     @BindView(R.id.btn_raise_study)
     ImageButton mBtnRaiseStudy;
     @OnClick({R.id.btn_raise_study})

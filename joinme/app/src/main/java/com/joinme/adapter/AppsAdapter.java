@@ -1,56 +1,65 @@
 package com.joinme.adapter;
 
-import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.TextView;
 
 import com.joinme.R;
-import com.joinme.model.AppInfos;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class AppsAdapter extends RecyclerView.Adapter<AppsViewHolder> {
+/**
+ * Created by kolibreath on 2018/4/21.
+ */
 
-    private List<AppInfos> mAppInfos;
-    private Context mContext;
-    private List<AppInfos> mBannedList = new ArrayList<>();
+public class AppsAdapter extends RecyclerView.Adapter<AppsAdapter.AppViewHolder> {
 
-    public AppsAdapter(Context mContext, List<AppInfos> mAppInfos) {
-        this.mContext = mContext;
-        this.mAppInfos = mAppInfos;
+//    private Context context;
+    private List<String> list;
+    private List<String> blackList = new ArrayList<>();
+    public AppsAdapter(List<String> mAppInfos) {
+        this.list = mAppInfos;
     }
 
     @Override
-    public AppsViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View layoutView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_app, null);
-        AppsViewHolder appsViewHolder = new AppsViewHolder(layoutView);
+    public AppViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View layoutView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_app_others, null);
+        AppViewHolder appsViewHolder = new AppViewHolder(layoutView);
         return appsViewHolder;
     }
 
 
     @Override
-    public void onBindViewHolder(AppsViewHolder holder, final int position) {
-        holder.mAppLogo.setImageDrawable(mAppInfos.get(position).getIcon());
-        holder.mAppName.setText(mAppInfos.get(position).getLabel());
-        holder.mAppLogo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mBannedList.add(new AppInfos(mAppInfos.get(position).getIcon()
-                ,mAppInfos.get(position).getLabel()));
-            }
-        });
+    public void onBindViewHolder(AppViewHolder holder, final int position) {
+        holder.mAppOthersName.setText(list.get(position));
+        holder.mIsBanned.setChecked(false);
+        holder.mIsBanned.setOnClickListener(view -> blackList.add(list.get(position)));
     }
 
     @Override
     public int getItemCount() {
-        return this.mAppInfos.size();
+        return this.list.size();
     }
 
-    public List<AppInfos> getmBannedList() {
-        return mBannedList;
+    public List<String> getBlackList() {
+        return blackList;
+    }
+
+    static class AppViewHolder extends RecyclerView.ViewHolder{
+        public TextView mAppOthersName;
+        public CheckBox mIsBanned;
+
+        public AppViewHolder(View itemView) {
+            super(itemView);
+            //todo
+//            itemView.setOnClickListener(this);
+
+            mAppOthersName = (TextView) itemView.findViewById(R.id.txv_app_others_name);
+            mIsBanned = (CheckBox) itemView.findViewById(R.id.cbx_app);
+        }
     }
 }
-

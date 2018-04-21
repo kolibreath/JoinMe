@@ -1,24 +1,17 @@
 package com.joinme;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import com.joinme.adapter.AppsAdapter;
-import com.joinme.adapter.AppsOthersAdapter;
 import com.joinme.appChoosingView.BannedAppChoosingDialog;
 import com.joinme.miscellaneous.App;
-import com.joinme.miscellaneous.MyTimer;
-import com.joinme.model.AppInfos;
 import com.joinme.model.AppPick;
 import com.joinme.model.AppPicker;
 import com.joinme.model.NetWorkUtils;
@@ -52,106 +45,23 @@ import static android.R.attr.keycode;
 
 public class ScreenSaverActivity extends AppCompatActivity {
     @BindView(R.id.txv_saver_time)
-    TextView txvSaverTime;
-    @BindView(R.id.btn_saver_pause)
-    Button btnSaverPause;
+    RxCDTextView txvSaverTime;
     @BindView(R.id.btn_saver_end)
     Button btnSaverEnd;
     @BindView(R.id.wld_view)
     WaveLoadingView wldProgress;
 
-    private AlertDialogUtils.OnPostiveListener otherListListener = new AlertDialogUtils.OnPostiveListener() {
-        @Override
-        public void onClick(DialogInterface dialogInterface, int i) {
-            dialogInterface.dismiss();
 
-        }
-    };
-    private boolean isFinal = false;
+    private static int sInterval = 1000;
     private List<String> otherUserList = new ArrayList<>();
     private List<String> otherBlackList = new ArrayList<>();
-    private AppsAdapter mAppsAdapter;
-    private AppsOthersAdapter mAppotherAdapter;
-    private HomeWatcher.OnHomePressedListener homePressedListener
-            = new HomeWatcher.OnHomePressedListener() {
-        @Override
-        public void onHomePressed() {
-            App.UNLOCKTIMES++;
-        }
 
-        @Override
-        public void onHomeLongPressed() {
-        }
-    };
-    private HomeWatcher mHomeWatcher = new HomeWatcher(ScreenSaverActivity.this);
-    private ScreenWatcher mScreenWatcher = new ScreenWatcher(ScreenSaverActivity.this);
-    private ScreenWatcher.ScreenListener mScreenListener = new ScreenWatcher.ScreenListener() {
-        @Override
-        public void onUnlock() {
-            RogueUtils.excuteScreenLocker("ScreenSaverActivity");
-        }
-    };
-    private boolean isAdded = false;
-    private boolean isReceiveRecord = false;
+    private RxTask mIsAddedTask = new RxTask(sInterval, o -> getOtherAppList());
+    private RxTask mIsReceiveRecordTask = new RxTask(sInterval, o->getRecord());
+    private RxTask mIsModifyTask = new RxTask(sInterval,o->getFinalAppList());
 
-    private CountDownTimer isModifyTimer = new CountDownTimer(120000, 200) {
-        @Override
-        public void onTick(long l) {
-            if (!isFinal) {
-                getFinalAppList();
-            } else {
-                isModifyTimer.cancel();
-            }
-        }
-
-        @Override
-        public void onFinish() {
-        }
-    };
-    private CountDownTimer isAddedTimer = new CountDownTimer(60000, 2000) {
-        @Override
-        public void onTick(long l) {
-            if (!isAdded) {
-                getOtherAppList();
-            } else {
-                isAdded = true;
-                isAddedTimer.cancel();
-            }
-        }
-
-        @Override
-        public void onFinish() {
-        }
-    };
-    private CountDownTimer isReceiveRecordTimer = new CountDownTimer(60000, 2000) {
-        @Override
-        public void onTick(long l) {
-            if (!isReceiveRecord)
-                getRecord();
-            else {
-                isReceiveRecord = true;
-                isReceiveRecordTimer.cancel();
-            }
-        }
-
-        @Override
-        public void onFinish() {
-
-        }
-    };
-
-    private MyTimer studyTimer;
-    private MyTimer.TimerListener timerListener = new MyTimer.TimerListener() {
-        @Override
-        public void onTimerTick() {
-            txvSaverTime.setText(studyTimer.getText(studyTimer.getMillisInFuture()));
-        }
-
-        @Override
-        public void onTimerFinish() {
-
-        }
-    };
+    //设置一个倒计时
+    private RxCountDownTimer mCountdownTimer = new RxCountDownTimer();
     private int pickMinute, pickHour;
 
     public static void start(Context context, int hour, int minute) {
@@ -185,17 +95,20 @@ public class ScreenSaverActivity extends AppCompatActivity {
         pickHour   = getIntent().getIntExtra("hour",0);
         pickMinute = getIntent().getIntExtra("minute",0);
         transAppList();
-        mScreenWatcher.register(mScreenListener);
-        mScreenWatcher.register(mScreenListener);
+
+        registerScreeWatcher();
     }
 
+    private void registerScreeWatcher(){
+        ScreenWatcher mScreenWatcher = new ScreenWatcher(ScreenSaverActivity.this);
+        ScreenWatcher.ScreenListener listener = () -> RogueUtils.excuteScreenLocker("ScreenSaverActivity");
+        mScreenWatcher.register(listener);
+
+    }
     //发起者和接受者互相传输Applist
     private void transAppList(){
-        List<AppInfos> appList  = AppInfoUtils.getAppInfos();
-        List<String> appLabelList  = new ArrayList<>();
-        for (int i = 0; i <appList.size() ; i++) {
-            appLabelList.add(appList.get(i).getLabel());
-        }
+        List<String> appLabelList  = AppInfoUtils.getAppNames(AppInfoUtils.getAppInfos());
+
         RxFactory.getRetrofitService()
                 .postTranslist(new AppPick(App.otherUserId,0,appLabelList))
                 .subscribeOn(Schedulers.io())
@@ -212,7 +125,7 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
                     @Override
                     public void onNext(Status status) {
-                        isAddedTimer.start();
+                       mIsAddedTask.start();
                     }
                 });
     }
@@ -234,7 +147,8 @@ public class ScreenSaverActivity extends AppCompatActivity {
                     }
                     @Override
                     public void onNext(Status status) {
-                        isModifyTimer.start();
+                        //60 秒倒计时
+                        mCountdownTimer.countdown(60);
                     }
                 });
     }
@@ -249,20 +163,16 @@ public class ScreenSaverActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<AppPicker>() {
                     @Override
-                    public void onCompleted() {
-                    }
+                    public void onCompleted() {}
                     @Override
-                    public void onError(Throwable e) {
-                    }
-
+                    public void onError(Throwable e) {e.printStackTrace();}
                     @Override
                     public void onNext(AppPicker appPick) {
-                        isAddedTimer.cancel();
+                        //获取成功
+                        mIsAddedTask.stop();
                         String apps = appPick.getApps();
                         otherUserList = parseString(apps);
-                        initListView();
-                    }
-                });
+                        initListView();}});
     }
 
     //获取对方修改过得AppList
@@ -286,20 +196,35 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
                     @Override
                     public void onNext(AppPicker appPicker) {
-                        isFinal = true;
-                        isModifyTimer.cancel();
+
+                        mIsModifyTask.start();
                         //     initRecyclerView(appPicker.getApps());
-                        //       mRlayoutApps.setVisibility(View.VISIBLE);
+                        //  mRlayoutApps.setVisibility(View.VISIBLE);
                         //等待对方确定了之后 才开始轮训
                         long millis = (pickHour * 3600 + pickMinute * 60) * 1000;
                         wldProgress.setAnimDuration(millis);
                         //倒计时
-                        studyTimer = new MyTimer(millis, 1000);
-                        studyTimer.setTimerListener(timerListener);
-                        studyTimer.onTick(1000);
-                        studyTimer.onFinish();
+//                        studyTimer = new MyTimer(millis, 1000);
+//                        studyTimer.setTimerListener(timerListener);
+//                        studyTimer.onTick(1000);
+//                        studyTimer.onFinish();
+                        //todo
+                        txvSaverTime.startCountdown((int) (millis/100));
+
+
+                        HomeWatcher mHomeWatcher = new HomeWatcher(ScreenSaverActivity.this);
                         mHomeWatcher.startWatch();
-                        mHomeWatcher.setOnHomePressedListener(homePressedListener);
+                        mHomeWatcher.setOnHomePressedListener(new HomeWatcher.OnHomePressedListener() {
+                            @Override
+                            public void onHomePressed() {
+                                App.UNLOCKTIMES++;
+                            }
+
+                            @Override
+                            public void onHomeLongPressed() {
+
+                            }
+                        });
                     }
                 });
     }
@@ -321,7 +246,8 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
                     @Override
                     public void onNext(UserRecord userRecord) {
-                        isReceiveRecordTimer.start();
+//                        isReceiveRecordTimer.start();
+                        mIsReceiveRecordTask.start();
                     }
                 });
     }
@@ -340,11 +266,12 @@ public class ScreenSaverActivity extends AppCompatActivity {
     }
 
 
+    //没有写点击回调
     private void initListView() {
-        mAppotherAdapter = new AppsOthersAdapter(this, otherUserList);
-        List<String> blackList = mAppotherAdapter.getBlackList();
+        AppsAdapter adapter = new AppsAdapter(otherUserList);
+
+        List<String> blackList = adapter.getBlackList();
         otherBlackList = blackList;
-        LinearLayoutManager manager = new LinearLayoutManager(this);
         BannedAppChoosingDialog dialog = new BannedAppChoosingDialog();
         dialog.show(getSupportFragmentManager(),"app_chooing_dialog");
     }

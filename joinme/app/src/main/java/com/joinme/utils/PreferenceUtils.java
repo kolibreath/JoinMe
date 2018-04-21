@@ -24,6 +24,7 @@ public class PreferenceUtils {
         SharedPreferences sharedPreferences = App.getContext().getSharedPreferences(App.getContext().getString(key),
                 Context.MODE_PRIVATE);
         String string = sharedPreferences.getString(App.getContext().getString(key),"NOTHING");
+
         return string;
     }
 

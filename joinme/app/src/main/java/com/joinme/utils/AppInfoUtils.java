@@ -37,6 +37,7 @@ import java.util.TreeMap;
 public class  AppInfoUtils {
     public static Context sContext;
     private static int sAgo = 30;
+
     //获取应用的包名 icon drawable 等等
     public static List<AppInfos> getAppInfos() {
         sContext = App.getContext();
@@ -54,6 +55,14 @@ public class  AppInfoUtils {
             }
         }
         return appInfosList;
+    }
+
+    public static List<String> getAppNames(List<AppInfos> infoList){
+        List<String> names= new ArrayList<>();
+        for(int i=0;i<infoList.size();i++){
+            names.add(infoList.get(i).getLabel());
+        }
+        return  names;
     }
     //返回的是应用的包名
     //返回最近的应用的包名

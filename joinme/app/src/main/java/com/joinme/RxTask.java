@@ -7,12 +7,14 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
-public class RxJavaTask {
+//RxJava 的輪讯器
+public class RxTask {
 
+    //interval
     private int milliscends;
     private Action1 action1;
     private Subscription mSubscription;
-    public RxJavaTask(int milliscends,Action1 action1){
+    public RxTask(int milliscends, Action1 action1){
         this.milliscends = milliscends;
         this.action1     = action1;
     }

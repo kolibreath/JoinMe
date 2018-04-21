@@ -38,18 +38,8 @@ public class BannedAppChoosingDialog extends CenterDialogFragment{
         View view = LayoutInflater.from(getContext()).inflate(R.layout.view_recycler_list,null);
         ButterKnife.bind(this,view);
         final Dialog dialog = createCenterDialog(view);
-        mBtnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
-        mBtnEnter.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
+        mBtnCancel.setOnClickListener(v -> dialog.dismiss());
+        mBtnEnter.setOnClickListener(v -> dialog.dismiss());
         GridLayoutManager manager = new GridLayoutManager(getContext(),3);
         mRvAppList.setLayoutManager(manager);
         return dialog;
