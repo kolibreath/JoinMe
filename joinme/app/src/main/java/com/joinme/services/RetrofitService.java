@@ -19,7 +19,7 @@ import rx.Observable;
  */
 
 public interface RetrofitService {
-    String HOST = "http://39.108.79.110:5001";
+    String HOST = "http://111.230.90.44:5001";
     //静默注册
     @POST("/api/signup/")
     Observable<UserMarkingCode> postRegister(@Body UserMarkingCode code);

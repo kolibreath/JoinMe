@@ -18,7 +18,7 @@ import java.util.List;
 //如何使你的应用变得流氓的工具
 public class RogueUtils {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static void startRoit(Context context, List<String> list){
+    public static void startRiot(Context context, List<String> list){
         for (int i = 0; i <list.size() ; i++) {
             String packageName = AppInfoUtils.getRunningApp();
             String label = AppInfoUtils.getApplicationLable(packageName);
@@ -36,7 +36,8 @@ public class RogueUtils {
 
     public static void excuteScreenLocker(String activityName){
         Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setClassName(App.sAppPackagename,App.sAppPackagename+"."+activityName);
+        i.setClassName(App.sAppPackagename,
+                App.sAppPackagename+"."+activityName);
         App.getContext().startActivity(i);
     }
 }

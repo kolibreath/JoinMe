@@ -19,6 +19,7 @@ import com.google.android.gms.vision.face.FaceDetector;
  * Created by kolibreath on 17-10-21.
  */
 
+//只有对着镜头拍出睁开眼睛才可以
 public class FaceView extends View {
     private Bitmap mBitmap;
     private SparseArray mFaces;

@@ -13,7 +13,17 @@ public class RxTask {
     //interval
     private int milliscends;
     private Action1 action1;
-    private Subscription mSubscription;
+    private Subscription mSubscription= new Subscription() {
+        boolean isUnsubscribed = false;
+        @Override
+        public void unsubscribe() {
+            isUnsubscribed = true;}
+
+        @Override
+        public boolean isUnsubscribed() {
+            return isUnsubscribed;
+        }
+    };
     public RxTask(int milliscends, Action1 action1){
         this.milliscends = milliscends;
         this.action1     = action1;

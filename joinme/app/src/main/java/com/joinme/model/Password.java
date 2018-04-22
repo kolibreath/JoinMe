@@ -7,7 +7,8 @@ package com.joinme.model;
 public class Password {
     String raiserId;
     String raiseTime;
-    public static String fliters[] = {"学习怎么能够说停就停？","现在是联网模式,想要抛弃你的队友吗"};
+    public static String fliters[] =
+            {"学习怎么能够说停就停？","现在是联网模式,想要抛弃你的队友吗"};
     public static String part1 = "[从前浪费过很多时间，现在不想再浪费时间了]一起开始";
     public static String part2 = "的学习吧，复制这条信息，学习--JoinMe，我等你,id";
     public Password(String raiserId, String raiseTime) {

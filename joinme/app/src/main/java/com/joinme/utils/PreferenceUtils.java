@@ -1,46 +1,108 @@
 package com.joinme.utils;
 
-import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import com.joinme.miscellaneous.App;
 
-/**
- * Created by kolibreath on 17-10-21.
- */
 
+/**
+ * Created by ybao on 16/4/19.
+ * SharedPreferences存储类
+ */
 public class PreferenceUtils {
 
-    public static void putString(int key, String string){
-        SharedPreferences sharedPreferences = App.getContext().getSharedPreferences(App.getContext().getString(key),
-                Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(App.getContext().getString(key),string);
+    public static String sUserMarker = "sUserMarker";
+    public static void saveBoolean(String key, boolean value) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.sContext).edit();
+        editor.putBoolean(key, value);
         editor.apply();
     }
 
-    //if the string exits if true read from memory; exit read string
-    public static String getString(int key){
-        SharedPreferences sharedPreferences = App.getContext().getSharedPreferences(App.getContext().getString(key),
-                Context.MODE_PRIVATE);
-        String string = sharedPreferences.getString(App.getContext().getString(key),"NOTHING");
-
-        return string;
+    public static boolean getBoolean(String key) {
+        return PreferenceManager.getDefaultSharedPreferences(App.sContext).getBoolean(key, false);
     }
 
-    public static void putInteger(int key, int value){
-        SharedPreferences sharedPreferences = App.getContext().getSharedPreferences(App.getContext().getString(key),
-                Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(App.getContext().getString(key),value);
+    public static boolean getBoolean(String key, boolean def) {
+        return PreferenceManager.getDefaultSharedPreferences(App.sContext).getBoolean(key, def);
+    }
+
+    public static void saveString(String key, String value) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.sContext).edit();
+        editor.putString(key, value);
         editor.apply();
     }
 
-    public static Integer getInteger(int key){
-        SharedPreferences sharedPreferences = App.getContext().getSharedPreferences(App.getContext().getString(key),
-                Context.MODE_PRIVATE);
-        int number = sharedPreferences.getInt(App.getContext().getString(key),-1);
-        return number;
+
+    public static String getString(String key) {
+        return PreferenceManager.getDefaultSharedPreferences(App.sContext).getString(key, "");
     }
+
+
+    public static String getString(String key, String def) {
+        return PreferenceManager.getDefaultSharedPreferences(App.sContext).getString(key, def);
+    }
+
+
+    //可用于用户上次使用后注销账号时移除账号
+    public static void clearString(String key) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.sContext).edit();
+        editor.remove(key);
+        editor.apply();
+    }
+
+
+    public static void saveInt(String key, int value) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.sContext).edit();
+        editor.putInt(key, value);
+        editor.apply();
+    }
+
+    public static void saveLong(String key, long value) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.sContext).edit();
+        editor.putLong(key, value);
+        editor.apply();
+    }
+
+    public static void saveFloat(String key, float value) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.sContext).edit();
+        editor.putFloat(key, value);
+        editor.apply();
+    }
+
+    public static float getFloat(String key) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(App.sContext);
+        return sp.getFloat(key, -1);
+    }
+
+    public static void clearFloat(String key){
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.sContext).edit();
+        editor.remove(key);
+        editor.apply();
+
+    }
+
+    public static long getLong(String key) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(App.sContext);
+        return sp.getLong(key, -1);
+    }
+
+    public static int getInt(String key) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(App.sContext);
+        return sp.getInt(key, -1);
+    }
+
+    public static int getInt(String key, int def) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(App.sContext);
+        return sp.getInt(key, def);
+    }
+
+    /**
+     * 清楚所有的数据,在注销时使用
+     */
+    public void clearAllData() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(App.sContext);
+    }
+
 
 }

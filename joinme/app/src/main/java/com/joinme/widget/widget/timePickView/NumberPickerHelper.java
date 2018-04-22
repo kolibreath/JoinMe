@@ -19,7 +19,7 @@ public class NumberPickerHelper {
 
     public static final int START_LINE_WIDTH = dp2px(8);
     public static void drawVerticalPickerBg(Canvas canvas, int width, int height){
-        int lineColor = App.sContext.getResources().getColor(R.color.divider);
+        int lineColor = App.getContext().getResources().getColor(R.color.divider);
         Path path = new Path();
 
         path.moveTo(0,0);
@@ -46,7 +46,7 @@ public class NumberPickerHelper {
         Path path2 = new Path();
         path2.moveTo(START_LINE_WIDTH / 2,height /3);
         path2.lineTo(START_LINE_WIDTH / 2,height * 2 /3);
-        p.setColor(App.sContext.getResources().getColor(R.color.colorAccent));
+        p.setColor(App.getContext().getResources().getColor(R.color.colorAccent));
         canvas.drawPath(path2,p);
 
         Path path3 = new Path();

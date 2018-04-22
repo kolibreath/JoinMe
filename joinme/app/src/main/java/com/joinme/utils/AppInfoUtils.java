@@ -35,12 +35,12 @@ import java.util.TreeMap;
  */
 
 public class  AppInfoUtils {
-    public static Context sContext;
+
     private static int sAgo = 30;
 
     //获取应用的包名 icon drawable 等等
     public static List<AppInfos> getAppInfos() {
-        sContext = App.getContext();
+        Context sContext = App.getContext();
         List<AppInfos> appInfosList = new ArrayList<>();
         PackageManager packageManager = sContext.getPackageManager();
         List<PackageInfo> packageInfoList = packageManager.getInstalledPackages(0);
@@ -69,10 +69,7 @@ public class  AppInfoUtils {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public static String getRunningApp(){
         String topPackagename;
-        sContext = App.getContext();
-        if(!isSwitch()){
-            sContext.startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-        }
+        Context sContext = App.getContext();
             UsageStatsManager mManager = (UsageStatsManager) sContext.getSystemService("usagestats");
             long time = System.currentTimeMillis();
             List<UsageStats> stats = mManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY
@@ -100,10 +97,12 @@ public class  AppInfoUtils {
     public static boolean isSwitch(){
         Context context = App.getContext();
         long ts  = System.currentTimeMillis();
-        UsageStatsManager manager = (UsageStatsManager) context.getSystemService("usagestats");
+        UsageStatsManager manager =
+                (UsageStatsManager) context.getSystemService("usagestats");
         List<UsageStats> queryUsageStats = manager.queryUsageStats(UsageStatsManager.INTERVAL_BEST,
                 0,ts);
         if(queryUsageStats==null||queryUsageStats.isEmpty()){
+            App.getContext().startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
             return false;
         }else{
             return true;
@@ -114,9 +113,6 @@ public class  AppInfoUtils {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public static List<AppInfos> getAppUsingData() {
         List<AppInfos> list = new ArrayList<>();
-        if(!isSwitch()){
-            App.getContext().startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-        }
         Calendar begin = Calendar.getInstance();
         begin.add(Calendar.HOUR_OF_DAY, -1);
         Calendar end = Calendar.getInstance();

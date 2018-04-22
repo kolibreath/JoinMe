@@ -16,15 +16,15 @@ public class SnackBarUtils {
         }
     };
     public static void showShort(View view,String message){
-       Snackbar.make(view,message,Snackbar.LENGTH_SHORT);
+       Snackbar.make(view,message,Snackbar.LENGTH_SHORT).show();
     }
 
     public static void showLong(View view,String message){
-        Snackbar.make(view,message,Snackbar.LENGTH_LONG);
+        Snackbar.make(view,message,Snackbar.LENGTH_LONG).show();
     }
 
     public static void showWithAction(View view,String message){
         Snackbar.make(view,message,Snackbar.LENGTH_INDEFINITE)
-        .setAction(message,listenerImpl);
+        .setAction(message,listenerImpl).show();
     }
 }
