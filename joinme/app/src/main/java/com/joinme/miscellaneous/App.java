@@ -19,8 +19,7 @@ public class App extends Application{
     public static Context getContext(){
         return sContext;
     }
-    public static String otherUserId ;
-    public static List<String> blackListApps = new ArrayList<>();
+    public static String otherUserId,userId;
     public static int UNLOCKTIMES = 0;
     public static List<String> pylist =  new ArrayList<>();
     @Override

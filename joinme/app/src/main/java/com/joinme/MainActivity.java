@@ -9,12 +9,15 @@ import android.widget.ImageButton;
 
 import com.joinme.miscellaneous.App;
 import com.joinme.model.AccepterInfo;
+import com.joinme.model.AppPick;
 import com.joinme.model.NetWorkUtils;
 import com.joinme.model.Password;
 import com.joinme.model.RaiserInfo;
+import com.joinme.model.Status;
 import com.joinme.model.UserMarkingCode;
 import com.joinme.services.RxFactory;
 import com.joinme.utils.AlertDialogUtils;
+import com.joinme.utils.AppInfoUtils;
 import com.joinme.utils.ClipBoardUtils;
 import com.joinme.utils.PreferenceUtils;
 import com.joinme.utils.SnackBarUtils;
@@ -22,31 +25,21 @@ import com.joinme.utils.UserMarkingUtils;
 import com.joinme.utils.VibratorUtils;
 import com.joinme.widget.widget.timePickView.TimePickerDialog;
 
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
-    private boolean isAccepted = false;
     private int pickMinute,pickHour ;
     private int mInterval = 300;
-//    private CountDownTimer checkAcceptedTimer = new CountDownTimer(60000,2000) {
-//        @Override
-//        public void onTick(long l) {
-//            if (!isAccepted){
-//                checkIsAccepted();
-//            }else{
-//                checkAcceptedTimer.cancel();
-//            }
-//        }
-//        @Override
-//        public void onFinish() {
-//        }
-//    };
-    private RxTask mRxJavaTask =  new RxTask(mInterval, o -> checkIsAccepted());
+
+    private RxTask mCheckAccepted =  new RxTask(mInterval, o -> checkIsAccepted());
     @BindView(R.id.btn_raise_study)
     ImageButton mBtnRaiseStudy;
     @OnClick({R.id.btn_raise_study})
@@ -99,7 +92,9 @@ public class MainActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(userMarkingCode -> {
-                    PreferenceUtils.putString(R.string.user_marker,userMarkingCode.getIdcode());
+                    App.userId = userMarkingCode.getIdcode();
+                    PreferenceUtils.putString
+                            (R.string.user_marker,userMarkingCode.getIdcode());
                 },Throwable::printStackTrace,()->{});
     }
     //发起者发起一个学习
@@ -115,11 +110,12 @@ public class MainActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(status -> {
-                   mRxJavaTask.start();
+                   mCheckAccepted.start();
                     },Throwable::printStackTrace,()->{});
     }
     //接受者检查口令 然后表示接受
     //一旦接受之后就会进入ScreenSaver
+    //todo 这一整个逻辑有问题嘛？
     private void raiseAccept() {
         String message = ClipBoardUtils.getText();
         if (message==null||!message.contains(Password.part1)
@@ -150,13 +146,37 @@ public class MainActivity extends AppCompatActivity {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(status -> {
-                            isAccepted = true;
-                            mRxJavaTask.stop();
-                            ScreenSaverActivity.start(MainActivity.this, pickHour,pickMinute);
+                            mCheckAccepted.stop();
+                            transAppList();
                         },e->{int code = NetWorkUtils.getresponseCode(e);
                             if(code==404){
-                                return;
-                            }},()->{});
+                                return; }},()->{});
 
     }
+
+    private void transAppList(){
+        List<String> appLabelList  =
+                AppInfoUtils.getAppNames(AppInfoUtils.getAppInfos());
+        RxFactory.getRetrofitService()
+                .postTranslist(new AppPick(App.userId,
+                        0,appLabelList))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<Status>() {
+                    @Override
+                    public void onCompleted() { }
+                    @Override
+                    public void onError(Throwable e) { }
+                    @Override
+                    public void onNext(Status status) {
+                        //todo
+//                        mIsAddedTask.start();
+                        //在两个人都传输完成之后再来回调
+                        ScreenSaverActivity.
+                                start(MainActivity.this, pickHour,pickMinute);
+                    }
+                });
+    }
+
+
 }

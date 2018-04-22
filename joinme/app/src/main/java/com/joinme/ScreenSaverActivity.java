@@ -14,14 +14,11 @@ import com.joinme.appChoosingView.BannedAppChoosingDialog;
 import com.joinme.miscellaneous.App;
 import com.joinme.model.AppPick;
 import com.joinme.model.AppPicker;
-import com.joinme.model.NetWorkUtils;
 import com.joinme.model.Status;
 import com.joinme.model.UserId;
 import com.joinme.model.UserRecord;
 import com.joinme.services.RxFactory;
 import com.joinme.utils.AlertDialogUtils;
-import com.joinme.utils.AppInfoUtils;
-import com.joinme.utils.PreferenceUtils;
 import com.joinme.utils.RogueUtils;
 import com.joinme.watchers.HomeWatcher;
 import com.joinme.watchers.ScreenWatcher;
@@ -33,6 +30,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.itangqi.waveloadingview.WaveLoadingView;
+import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -56,12 +54,12 @@ public class ScreenSaverActivity extends AppCompatActivity {
     private List<String> otherUserList = new ArrayList<>();
     private List<String> otherBlackList = new ArrayList<>();
 
-    private RxTask mIsAddedTask = new RxTask(sInterval, o -> getOtherAppList());
     private RxTask mIsReceiveRecordTask = new RxTask(sInterval, o->getRecord());
-    private RxTask mIsModifyTask = new RxTask(sInterval,o->getFinalAppList());
 
     //设置一个倒计时
     private RxCountDownTimer mCountdownTimer = new RxCountDownTimer();
+    //从oncreate开始就开始记录时间 如果从拿到双方的applist ->　修改完成的时间控制在３０ｓ内
+    private RxCountDownTimer mTotalCountdownTimer = new RxCountDownTimer();
     private int pickMinute, pickHour;
 
     public static void start(Context context, int hour, int minute) {
@@ -94,9 +92,52 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
         pickHour   = getIntent().getIntExtra("hour",0);
         pickMinute = getIntent().getIntExtra("minute",0);
-        transAppList();
 
         registerScreeWatcher();
+
+        //开始总倒计时 倒计时完成之后的回调
+        //todo 查证一下这个applist 获取有没有问题
+        mTotalCountdownTimer.onFinish(30)
+                .flatMap(o -> getAppList(App.userId))
+                .subscribe(new Subscriber() {
+                    @Override
+                    public void onCompleted() { }
+                    @Override
+                    public void onError(Throwable e) {e.printStackTrace();}
+                    @Override
+                    //获取别人修改过得自己的ｉｄ
+                    public void onNext(Object o) {
+                        AppPicker appPicker = ((AppPicker)o);
+                        //等待对方确定了之后 才开始轮训
+                        long millis = (pickHour * 3600 + pickMinute * 60) * 1000;
+                        wldProgress.setAnimDuration(millis);
+                        //todo
+                        txvSaverTime.startCountdown((int) (millis/100));
+                        HomeWatcher mHomeWatcher = new
+                                HomeWatcher(ScreenSaverActivity.this);
+                        mHomeWatcher.startWatch();
+                        mHomeWatcher.setOnHomePressedListener
+                                (new HomeWatcher.OnHomePressedListener() {
+                            @Override
+                            public void onHomePressed() {
+                                App.UNLOCKTIMES++;}
+                            @Override
+                            public void onHomeLongPressed() { }});
+                    }});
+
+        //获取别人的list
+        getAppList(App.otherUserId)
+                        .subscribe(new Subscriber<AppPicker>() {
+                    @Override
+                    public void onCompleted() {}
+                    @Override
+                    public void onError(Throwable e) {e.printStackTrace();}
+                    @Override
+                    public void onNext(AppPicker appPick) {
+                        //获取成功
+                        String apps = appPick.getApps();
+                        otherUserList = parseString(apps);
+                        initListView();}});
     }
 
     private void registerScreeWatcher(){
@@ -105,46 +146,20 @@ public class ScreenSaverActivity extends AppCompatActivity {
         mScreenWatcher.register(listener);
 
     }
-    //发起者和接受者互相传输Applist
-    private void transAppList(){
-        List<String> appLabelList  = AppInfoUtils.getAppNames(AppInfoUtils.getAppInfos());
 
-        RxFactory.getRetrofitService()
-                .postTranslist(new AppPick(App.otherUserId,0,appLabelList))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<Status>() {
-                    @Override
-                    public void onCompleted() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onNext(Status status) {
-                       mIsAddedTask.start();
-                    }
-                });
-    }
 
     //发起者和接受者互相传输使修改过的list
     private void transModifiedList(){
-        String userMarker = PreferenceUtils.getString(R.string.user_marker);
         RxFactory.getRetrofitService()
-                .postTranslist(new AppPick(userMarker,1,otherBlackList))
+                .postTranslist(new AppPick(App.otherUserId,
+                        1,otherBlackList))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<Status>() {
                     @Override
-                    public void onCompleted() {
-                    }
-
+                    public void onCompleted() { }
                     @Override
-                    public void onError(Throwable e) {
-                    }
+                    public void onError(Throwable e) { }
                     @Override
                     public void onNext(Status status) {
                         //60 秒倒计时
@@ -155,79 +170,15 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
     //发起者和接受者互相查询是否有这个选择禁用的list
     //一旦获取到,开始执行倒计时
-    private void getOtherAppList() {
+    //参数　如果是自己的ｉｄ　就是需要获取自己的applist 反之亦然
+    private Observable getAppList(String userId) {
         //获得对方的
-        RxFactory.getRetrofitService()
-                .postGetModifiedAppList(new UserId(App.otherUserId))
+        return RxFactory.getRetrofitService()
+                .postGetModifiedAppList(new UserId(userId))
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<AppPicker>() {
-                    @Override
-                    public void onCompleted() {}
-                    @Override
-                    public void onError(Throwable e) {e.printStackTrace();}
-                    @Override
-                    public void onNext(AppPicker appPick) {
-                        //获取成功
-                        mIsAddedTask.stop();
-                        String apps = appPick.getApps();
-                        otherUserList = parseString(apps);
-                        initListView();}});
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
-    //获取对方修改过得AppList
-    private void getFinalAppList() {
-        String userMarker = PreferenceUtils.getString(R.string.user_marker);
-        RxFactory.getRetrofitService()
-                .postGetModifiedAppList(new UserId(userMarker))
-                .observeOn(Schedulers.io())
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<AppPicker>() {
-                    @Override
-                    public void onCompleted() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        int code = NetWorkUtils.getresponseCode(e);
-                        if (code == 404)
-                            return;
-                    }
-
-                    @Override
-                    public void onNext(AppPicker appPicker) {
-
-                        mIsModifyTask.start();
-                        //     initRecyclerView(appPicker.getApps());
-                        //  mRlayoutApps.setVisibility(View.VISIBLE);
-                        //等待对方确定了之后 才开始轮训
-                        long millis = (pickHour * 3600 + pickMinute * 60) * 1000;
-                        wldProgress.setAnimDuration(millis);
-                        //倒计时
-//                        studyTimer = new MyTimer(millis, 1000);
-//                        studyTimer.setTimerListener(timerListener);
-//                        studyTimer.onTick(1000);
-//                        studyTimer.onFinish();
-                        //todo
-                        txvSaverTime.startCountdown((int) (millis/100));
-
-
-                        HomeWatcher mHomeWatcher = new HomeWatcher(ScreenSaverActivity.this);
-                        mHomeWatcher.startWatch();
-                        mHomeWatcher.setOnHomePressedListener(new HomeWatcher.OnHomePressedListener() {
-                            @Override
-                            public void onHomePressed() {
-                                App.UNLOCKTIMES++;
-                            }
-
-                            @Override
-                            public void onHomeLongPressed() {
-
-                            }
-                        });
-                    }
-                });
-    }
 
     //在完成倒计时之后互相发送消息
     private void getRecord() {
@@ -237,18 +188,11 @@ public class ScreenSaverActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<UserRecord>() {
                     @Override
-                    public void onCompleted() {
-                    }
-
+                    public void onCompleted() { }
                     @Override
-                    public void onError(Throwable e) {
-                    }
-
+                    public void onError(Throwable e) {e.printStackTrace(); }
                     @Override
-                    public void onNext(UserRecord userRecord) {
-//                        isReceiveRecordTimer.start();
-                        mIsReceiveRecordTask.start();
-                    }
+                    public void onNext(UserRecord userRecord) { mIsReceiveRecordTask.start(); }
                 });
     }
 
@@ -270,10 +214,15 @@ public class ScreenSaverActivity extends AppCompatActivity {
     private void initListView() {
         AppsAdapter adapter = new AppsAdapter(otherUserList);
 
-        List<String> blackList = adapter.getBlackList();
-        otherBlackList = blackList;
+        otherBlackList = adapter.getBlackList();
         BannedAppChoosingDialog dialog = new BannedAppChoosingDialog();
         dialog.show(getSupportFragmentManager(),"app_chooing_dialog");
+        dialog.setEnterListener(() -> {
+            transModifiedList();
+        });
+
+        dialog.setCancelListener(() -> {//什么都不做就是消失
+        });
     }
     private List<String> parseString(String json){
         String apps[] = json.split(",");
