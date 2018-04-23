@@ -47,7 +47,7 @@ import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
     private int mPickMinute, mPickHour;
-    private int mInterval = 300;
+    private int mInterval = 3000;
 
     private String[] mPermissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
     private RxTask mCheckAccepted =  new RxTask(mInterval, o -> checkIsAccepted());
@@ -96,12 +96,13 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.tb_main);
         setSupportActionBar(toolbar);
-        toolbar.setTitle("");
+        getSupportActionBar().setTitle("");
 
         requestPower();
     }
 
-        public void requestPower() {
+
+    public void requestPower() {
             //判断是否已经赋予权限
             for(int i=0;i<mPermissions.length;i++) {
                 if (ContextCompat.checkSelfPermission(this, mPermissions[i])
