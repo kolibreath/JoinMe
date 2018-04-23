@@ -41,8 +41,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
-import rx.Subscriber;
+import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String[] mPermissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
     private RxTask mCheckAccepted =  new RxTask(mInterval, o -> checkIsAccepted());
+    private RxCountDownTimer mBalanceTimer = new RxCountDownTimer();
     @BindView(R.id.btn_raise_study)
     ImageButton mBtnRaiseStudy;
     @OnClick({R.id.btn_raise_study})
@@ -193,28 +195,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //todo 两边都延迟5秒一定要获取app list
     private void transAppList(){
         List<String> appLabelList  =
                 AppInfoUtils.getAppNames(AppInfoUtils.getAppInfos());
+        
         RxFactory.getRetrofitService()
-                .postTranslist(new AppPick(App.userId,
-                        0,appLabelList))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<Status>() {
-                    @Override
-                    public void onCompleted() { }
-                    @Override
-                    public void onError(Throwable e) { }
-                    @Override
-                    public void onNext(Status status) {
-                        //todo
-//                        mIsAddedTask.start();
-                        //在两个人都传输完成之后再来回调
-                        ScreenSaverActivity.
-                                start(MainActivity.this, mPickHour, mPickMinute);
-                    }
-                });
+                .postTranslist(new AppPick(App.userId,0,appLabelList))
+                .flatMap((Func1<Status, Observable<?>>)
+                        status -> mBalanceTimer.onFinish(5))
+                .subscribe
+                        (o -> ScreenSaverActivity.start(MainActivity.this,mPickHour,mPickMinute));
     }
 
 

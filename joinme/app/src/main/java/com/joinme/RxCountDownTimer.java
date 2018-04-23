@@ -32,10 +32,12 @@ public class RxCountDownTimer {
 
     public Observable onFinish(int time){
         int countdown = time;
+
         return Observable
                 .interval(0,1,TimeUnit.SECONDS)
+//                .toSingle()
                 .map(increseTime-> countdown - increseTime.intValue())
-                .filter(integer -> integer<=0);
+                .filter(integer -> integer<=0).first();
     }
 
     public int getCountdown(){
