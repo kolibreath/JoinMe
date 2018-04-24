@@ -27,13 +27,13 @@ public class ScreenWatcher {
             IntentFilter filter = new IntentFilter();
             filter.addAction(Intent.ACTION_SCREEN_ON);
             filter.addAction(Intent.ACTION_USER_PRESENT);
-            context.registerReceiver(receiver, filter);
+            context.getApplicationContext().registerReceiver(receiver, filter);
         }
     }
 
-    public void unregister(){
+    public void     unregister(){
         if(receiver!=null){
-            context.unregisterReceiver(receiver);
+            context.getApplicationContext().unregisterReceiver(receiver);
         }
     }
 

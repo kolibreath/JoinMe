@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -52,8 +53,12 @@ public class CameraActivity extends AppCompatActivity {
             }
 
             if(mFaceView.isEyesOpen()){
+                Log.d("fuck", "onActivityResult:zaoshang ");
                 SnackBarUtils.showShort(mFaceView,"早上好~");
 //                finish();
+            }else{
+                SnackBarUtils.showShort(mFaceView,"起床了!!");
+                Log.d("fuck", "onActivityResult:fafafafa");
             }
         }
     }

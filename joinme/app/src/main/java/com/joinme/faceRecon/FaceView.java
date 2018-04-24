@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 
@@ -103,7 +104,8 @@ public class FaceView extends View {
                 Face face = (Face) mFaces.valueAt(i);
                 pLeftEyeOpen = face.getIsLeftEyeOpenProbability();
                 pRightEyeOpen = face.getIsRightEyeOpenProbability();
-                if(pLeftEyeOpen>0.8&&pRightEyeOpen>0.8){
+                Log.d("fuck", "isEyesOpen: "+pLeftEyeOpen + " "+ pRightEyeOpen);
+                if(pLeftEyeOpen>0.4&&pRightEyeOpen>0.4){
                     return true;
                 }
             }

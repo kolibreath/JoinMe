@@ -8,29 +8,29 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.joinme.miscellaneous.MyTimer;
+import com.joinme.RxTask;
 import com.joinme.utils.RogueUtils;
+
+import rx.Subscriber;
 
 /**
  * Created by kolibreath on 17-10-21.
  */
 
 public class QueryActivityService extends Service {
-    private static final long QUERY_COUNTDOWN = 3000;
-    private static final long QUERY_INTERVAL = 1000;
-    //默认打开这个应用
-    private MyTimer.TimerListener countDownListener = new MyTimer.TimerListener() {
-        @Override
-        public void onTimerTick() {
-            Log.d("rogue", "onTimerTick: ");
-        }
 
+    private RxTask counterTask = new RxTask(1000, new Subscriber() {
         @Override
-        public void onTimerFinish() {
-            RogueUtils.excuteScreenLocker("ScreenSaverActivity");
-        }
-    };
-    private MyTimer timer = new MyTimer(QUERY_COUNTDOWN,QUERY_INTERVAL);
+        public void onCompleted() { }
+        @Override
+        public void onError(Throwable e) {e.printStackTrace();}
+        @Override
+        public void onNext(Object o) {
+            Log.d("fuck", "onNext: rogue");
+            RogueUtils.excuteScreenLocker("ScreenSaverActivity"); }
+    });
+
+//    private MyTimer timer = new MyTimer(QUERY_COUNTDOWN,QUERY_INTERVAL);
     @Override
     public void onCreate() {
         super.onCreate();
@@ -44,9 +44,7 @@ public class QueryActivityService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        timer.setTimerListener(countDownListener);
-        timer.start();
-        timer.onFinish();
+        counterTask.start();
         return super.onStartCommand(intent, flags, startId);
     }
 

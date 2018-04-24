@@ -12,6 +12,8 @@ import android.view.View;
 import android.widget.Button;
 
 import com.joinme.R;
+import com.joinme.RxBus;
+import com.joinme.TransModifyEvent;
 import com.joinme.adapter.AppsAdapter;
 
 import java.util.List;
@@ -34,36 +36,12 @@ public class BannedAppChoosingDialog extends CenterDialogFragment{
 
     private static AppsAdapter mAppAdapter;
     private static List<String> mUserList;
-    private static DialogClickListener mEnterListener;
-    private static DialogClickListener mCancelListener;
+
 //    private DialogClickListener mCancelListener, mEnterListener
 
-    public void setCancelListener(DialogClickListener cancelListener){
-        if(cancelListener!=null){
-            this.mCancelListener  = cancelListener;
-            mBtnCancel.setOnClickListener(view12 -> {
-                mCancelListener.onclick();
-                mDialog.dismiss();
-            });
-        }
-    }
 
-    public void setEnterListener(DialogClickListener enterListener){
-        if(enterListener!=null){
-            this.mEnterListener = enterListener;
-            mBtnEnter.setOnClickListener(view12 -> {
-                mEnterListener.onclick();
-                mDialog.dismiss();
-            });
-        }
-    }
-
-    public static BannedAppChoosingDialog newInstance(DialogClickListener EnterListener,
-                                                      DialogClickListener CancelListener,
-                                                      List<String> userApplist,
+    public static BannedAppChoosingDialog newInstance(List<String> userApplist,
                                                       AppsAdapter adapter){
-        mEnterListener = EnterListener;
-        mCancelListener = CancelListener;
         mUserList = userApplist;
         mAppAdapter  = adapter;
         return new BannedAppChoosingDialog();
@@ -77,8 +55,12 @@ public class BannedAppChoosingDialog extends CenterDialogFragment{
         mBtnCancel = view.findViewById(R.id.btn_app_choosing_cancel);
         mRvAppList = view.findViewById(R.id.rv_app_choosing_list);
 
-        setEnterListener(mEnterListener);
-        setEnterListener(mCancelListener);
+        mBtnEnter.setOnClickListener(view1->{
+            Log.d("fuck", "onCreateDialog: "+"onclicked");
+            dismiss();
+            RxBus.getDefault().send(TransModifyEvent.class);
+        });
+        mBtnCancel.setOnClickListener(view2->{dismiss();});
 
         mDialog = createCenterDialog(view);
 
@@ -90,5 +72,6 @@ public class BannedAppChoosingDialog extends CenterDialogFragment{
 
     public interface DialogClickListener {
 
-        void onclick();}
+        void onclick();
+    }
 }

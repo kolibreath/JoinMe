@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -24,7 +25,6 @@ import com.joinme.services.RxFactory;
 import com.joinme.utils.AlertDialogUtils;
 import com.joinme.utils.RogueUtils;
 import com.joinme.watchers.HomeWatcher;
-import com.joinme.watchers.ScreenWatcher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +51,10 @@ public class ScreenSaverActivity extends AppCompatActivity {
     Button btnSaverEnd;
     @BindView(R.id.wld_view)
     WaveLoadingView wldProgress;
+    @BindView(R.id.btn_saver_pause)
+    Button mBtnSaverPause;
 
-    private ScreenWatcher mScreenWatcher;
+//    private ScreenWatcher mScreenWatcher;
 
     private List<String> mBannedApps ;
     private static int sInterval = 1000;
@@ -71,7 +73,7 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
     //从oncreate开始就开始记录时间 如果从拿到双方的applist ->　修改完成的时间控制在３０ｓ内
     private RxCountDownTimer mTotalCountdownTimer = new RxCountDownTimer();
-    private int pickMinute, pickHour;
+    private int pickMinute = 7, pickHour = 0;
 
     public static void start(Context context, int hour, int minute) {
         Intent intent = new Intent(context, ScreenSaverActivity.class);
@@ -85,6 +87,7 @@ public class ScreenSaverActivity extends AppCompatActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_saver_pause:
+                transModifiedList();
                 break;
             case R.id.btn_saver_end:
                 break;
@@ -97,16 +100,19 @@ public class ScreenSaverActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_screen_saver);
         ButterKnife.bind(this);
+//
+//        pickHour   = getIntent().getIntExtra("hour",0);
+//        pickMinute = getIntent().getIntExtra("minute",0);
 
-        pickHour   = getIntent().getIntExtra("hour",0);
-        pickMinute = getIntent().getIntExtra("minute",0);
-
-        registerScreeWatcher();
+//        registerScreeWatcher();
         registerHomeWatcher();
+
+        RogueUtils.startRiot(App.mockList);
 
         //开始总倒计时 倒计时完成之后的回调
         //todo 查证一下这个applist 获取有没有问题
-        mTotalCountdownTimer.onFinish(5)
+        //因为这个写法不太好 就本地mock一下被ban掉的apps
+        mTotalCountdownTimer.onFinish(18)
                 .flatMap(o -> getAppList(App.userId))
                 .subscribe(new Subscriber() {
                     @Override
@@ -136,9 +142,9 @@ public class ScreenSaverActivity extends AppCompatActivity {
                                 });
                         //todo start to rogue!
                         String json = ((AppPicker)o).getApps();
-                        mBannedApps = parseString(json);
+//                        mBannedApps = parseString(json);
 
-                        RogueUtils.startRiot(ScreenSaverActivity.this,mBannedApps);
+
                     }});
 
         //获取别人的list
@@ -154,6 +160,18 @@ public class ScreenSaverActivity extends AppCompatActivity {
                         String apps = appPick.getApps();
                         otherUserList = parseString(apps);
                         initListView();}});
+
+        RxBus.getDefault().toObservable(TransModifyEvent.class)
+                .subscribe(new Subscriber<TransModifyEvent>() {
+                    @Override
+                    public void onCompleted() { }
+                    @Override
+                    public void onError(Throwable e) {e.printStackTrace();}
+                    @Override
+                    public void onNext(TransModifyEvent transModifyEvent) {
+                        Log.d("fuckx", "onNext: ");
+                        transModifiedList();}
+                });
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -172,15 +190,16 @@ public class ScreenSaverActivity extends AppCompatActivity {
     }
 
     private void registerScreeWatcher(){
-        mScreenWatcher = new ScreenWatcher(ScreenSaverActivity.this);
-        ScreenWatcher.ScreenListener listener =
-                () -> RogueUtils.excuteScreenLocker("ScreenSaverActivity");
-        mScreenWatcher.register(listener);
+//        mScreenWatcher = new ScreenWatcher(ScreenSaverActivity.this);
+//        ScreenWatcher.ScreenListener listener =
+//                () -> RogueUtils.excuteScreenLocker("ScreenSaverActivity");
+//        mScreenWatcher.register(listener);
 
     }
 
     //发起者和接受者互相传输使修改过的list
-    private void transModifiedList(){
+    private void  transModifiedList(){
+        Log.d("fuck", "transModifiedList: ");
         RxFactory.getRetrofitService()
                 .postTranslist(new AppPick(App.otherUserId,
                         1,otherBlackList))
@@ -241,11 +260,7 @@ public class ScreenSaverActivity extends AppCompatActivity {
         AppsAdapter adapter = new AppsAdapter(otherUserList);
         otherBlackList = adapter.getBlackList();
 
-        BannedAppChoosingDialog.DialogClickListener enterListener = this::transModifiedList;
-        BannedAppChoosingDialog.DialogClickListener cancleListener = () -> {};
-        BannedAppChoosingDialog dialog = BannedAppChoosingDialog.newInstance(enterListener,cancleListener
-                ,otherUserList,adapter);
-
+        BannedAppChoosingDialog dialog = BannedAppChoosingDialog.newInstance(otherUserList,adapter);
         dialog.show(getSupportFragmentManager(),"app_chooing_dialog");
 
     }
@@ -253,7 +268,7 @@ public class ScreenSaverActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mScreenWatcher.unregister();
+//        mScreenWatcher.unregister();ing
     }
 
     private List<String> parseString(String json){
