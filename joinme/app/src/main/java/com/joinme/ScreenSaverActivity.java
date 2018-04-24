@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.joinme.adapter.AppsAdapter;
 import com.joinme.appChoosingView.BannedAppChoosingDialog;
@@ -45,18 +46,28 @@ import static android.R.attr.keycode;
 
 public class ScreenSaverActivity extends AppCompatActivity {
     @BindView(R.id.txv_saver_time)
-    RxCDTextView txvSaverTime;
+    TextView txvSaverTime;
     @BindView(R.id.btn_saver_end)
     Button btnSaverEnd;
     @BindView(R.id.wld_view)
     WaveLoadingView wldProgress;
+
+    private ScreenWatcher mScreenWatcher;
 
     private List<String> mBannedApps ;
     private static int sInterval = 1000;
     private List<String> otherUserList = new ArrayList<>();
     private List<String> otherBlackList = new ArrayList<>();
 
-    private RxTask mIsReceiveRecordTask = new RxTask(sInterval, o->getRecord());
+    private RxCountDownTimer mCountTimer = new RxCountDownTimer();
+    private RxTask mIsReceiveRecordTask = new RxTask(sInterval,
+            new Subscriber() {
+                @Override
+                public void onCompleted() { }
+                @Override
+                public void onError(Throwable e) { }
+                @Override
+                public void onNext(Object o) {getRecord();}});
 
     //从oncreate开始就开始记录时间 如果从拿到双方的applist ->　修改完成的时间控制在３０ｓ内
     private RxCountDownTimer mTotalCountdownTimer = new RxCountDownTimer();
@@ -69,10 +80,6 @@ public class ScreenSaverActivity extends AppCompatActivity {
         context.startActivity(intent);
     }
 
-    public static void start(Context context) {
-        Intent intent = new Intent(context, ScreenSaverActivity.class);
-        context.startActivity(intent);
-    }
 
     @OnClick({R.id.btn_saver_pause, R.id.btn_saver_end})
     public void onViewClicked(View view) {
@@ -99,7 +106,7 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
         //开始总倒计时 倒计时完成之后的回调
         //todo 查证一下这个applist 获取有没有问题
-        mTotalCountdownTimer.onFinish(30)
+        mTotalCountdownTimer.onFinish(5)
                 .flatMap(o -> getAppList(App.userId))
                 .subscribe(new Subscriber() {
                     @Override
@@ -112,8 +119,21 @@ public class ScreenSaverActivity extends AppCompatActivity {
                     public void onNext(Object o) {
                         long millis = (pickHour * 3600 + pickMinute * 60) * 1000;
                         wldProgress.setAnimDuration(millis);
+
                         //todo 显示倒计时的时间
-                        txvSaverTime.startCountdown((int) (millis/100));
+                        mCountTimer.countdown(Integer.valueOf(pickHour*3600 + pickMinute*60))
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(new Subscriber() {
+                                    @Override
+                                    public void onCompleted() { }
+                                    @Override
+                                    public void onError(Throwable e) {e.printStackTrace();}
+                                    @Override
+                                    public void onNext(Object o) {
+                                        Integer integer = (Integer)o;
+                                        txvSaverTime.setText(String.valueOf(integer)+"s");
+                                    }
+                                });
                         //todo start to rogue!
                         String json = ((AppPicker)o).getApps();
                         mBannedApps = parseString(json);
@@ -152,7 +172,7 @@ public class ScreenSaverActivity extends AppCompatActivity {
     }
 
     private void registerScreeWatcher(){
-        ScreenWatcher mScreenWatcher = new ScreenWatcher(ScreenSaverActivity.this);
+        mScreenWatcher = new ScreenWatcher(ScreenSaverActivity.this);
         ScreenWatcher.ScreenListener listener =
                 () -> RogueUtils.excuteScreenLocker("ScreenSaverActivity");
         mScreenWatcher.register(listener);
@@ -219,15 +239,23 @@ public class ScreenSaverActivity extends AppCompatActivity {
 
     private void initListView() {
         AppsAdapter adapter = new AppsAdapter(otherUserList);
-
         otherBlackList = adapter.getBlackList();
-        BannedAppChoosingDialog dialog = new BannedAppChoosingDialog();
-        dialog.show(getSupportFragmentManager(),"app_chooing_dialog");
-        dialog.setEnterListener(this::transModifiedList);
 
-        dialog.setCancelListener(() -> {//什么都不做就是消失
-        });
+        BannedAppChoosingDialog.DialogClickListener enterListener = this::transModifiedList;
+        BannedAppChoosingDialog.DialogClickListener cancleListener = () -> {};
+        BannedAppChoosingDialog dialog = BannedAppChoosingDialog.newInstance(enterListener,cancleListener
+                ,otherUserList,adapter);
+
+        dialog.show(getSupportFragmentManager(),"app_chooing_dialog");
+
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mScreenWatcher.unregister();
+    }
+
     private List<String> parseString(String json){
         String apps[] = json.split(",");
         List<String> applist = new ArrayList<>();

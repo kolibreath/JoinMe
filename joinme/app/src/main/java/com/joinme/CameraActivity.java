@@ -14,6 +14,7 @@ import android.view.Display;
 import android.view.WindowManager;
 
 import com.joinme.faceRecon.FaceView;
+import com.joinme.utils.SnackBarUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,8 +50,11 @@ public class CameraActivity extends AppCompatActivity {
             if(bitamp !=null){
                 mFaceView.setBitmap(bitamp);
             }
-            //todo
-            mFaceView.isEyesOpen();
+
+            if(mFaceView.isEyesOpen()){
+                SnackBarUtils.showShort(mFaceView,"早上好~");
+//                finish();
+            }
         }
     }
 

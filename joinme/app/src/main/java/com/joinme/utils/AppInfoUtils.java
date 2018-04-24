@@ -109,6 +109,7 @@ public class  AppInfoUtils {
         }
     }
 
+//    public static
     //返回应用使用的时长 和 相关信息等
     @RequiresApi(api = Build.VERSION_CODES.N)
     public static List<AppInfos> getAppUsingData() {

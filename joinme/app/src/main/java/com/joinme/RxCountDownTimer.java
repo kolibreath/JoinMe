@@ -17,7 +17,6 @@ public class RxCountDownTimer {
     public Observable countdown(int time){
         if(time<0)
             time = 0;
-
         countdown  = time;
         return Observable
                 .interval(0,1

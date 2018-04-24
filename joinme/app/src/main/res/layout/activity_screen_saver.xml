@@ -20,7 +20,7 @@
         app:wlv_waveColor="@color/colorTheme"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-    <com.joinme.RxCDTextView
+    <TextView
         android:id="@+id/txv_saver_time"
         tools:text="@string/txv_time_eg"
         android:textSize="28sp"

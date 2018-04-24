@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -35,24 +36,38 @@ import com.joinme.utils.UserMarkingUtils;
 import com.joinme.utils.VibratorUtils;
 import com.joinme.widget.widget.timePickView.TimePickerDialog;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
 import rx.Observable;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
-    private int mPickMinute, mPickHour;
+    //todo 接收者的时间 默认设置为 0小时 7分钟
+    private int mPickMinute = 7, mPickHour  =0;
     private int mInterval = 3000;
 
     private String[] mPermissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-    private RxTask mCheckAccepted =  new RxTask(mInterval, o -> checkIsAccepted());
+    private RxTask mCheckAccepted =  new RxTask(mInterval, new Subscriber() {
+        @Override
+        public void onCompleted() { }
+        @Override
+        public void onError(Throwable e) {e.printStackTrace();}
+        @Override
+        public void onNext(Object o) { checkIsAccepted(); }
+    });
     private RxCountDownTimer mBalanceTimer = new RxCountDownTimer();
+
     @BindView(R.id.btn_raise_study)
     ImageButton mBtnRaiseStudy;
     @OnClick({R.id.btn_raise_study})
@@ -124,6 +139,8 @@ public class MainActivity extends AppCompatActivity {
     private void silentRegister(){
         String temp = PreferenceUtils.getString(PreferenceUtils.sUserMarker);
         if(!TextUtils.isEmpty(temp)){
+            ClipBoardUtils.copy(temp);
+            SnackBarUtils.showShort(mBtnRaiseStudy,"用户id已经复制到您的剪贴板");
             return;
         }
         String userMarker = UserMarkingUtils.getUserMaker();
@@ -133,6 +150,8 @@ public class MainActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(userMarkingCode -> {
                     App.userId = userMarkingCode.getIdcode();
+                    ClipBoardUtils.copy(App.userId);
+                    SnackBarUtils.showShort(mBtnRaiseStudy,"用户id已经复制到您的剪贴板");
                     PreferenceUtils.saveString(PreferenceUtils.sUserMarker,
                             App.userId);
                 },Throwable::printStackTrace,()->{});
@@ -158,6 +177,10 @@ public class MainActivity extends AppCompatActivity {
     //todo 这一整个逻辑有问题嘛？
     private void raiseAccept() {
         String message = ClipBoardUtils.getText();
+        if(Character.isDigit(message.charAt(0))){
+            App.otherUserId = message;
+            return;
+        }
         if (TextUtils.isEmpty(message)||!message.contains(Password.part1)
                 ||!message.contains(Password.part2))
             return;
@@ -169,7 +192,10 @@ public class MainActivity extends AppCompatActivity {
         if(App.userId.equals(raiserId))
             return;
 
-        AlertDialogUtils.show(MainActivity.this,message);
+//        AlertDialogUtils.show(MainActivity.this,message);
+
+        AlertDialogUtils.show(this, message, (dialogInterface, i) -> {
+
         RxFactory.getRetrofitService()
                 .postAccept(new AccepterInfo(raiserId,App.userId))
                 .subscribeOn(Schedulers.io())
@@ -177,7 +203,9 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(
                         status -> {
                             transAppList();
-                },Throwable::printStackTrace,()->{});}
+                },Throwable::printStackTrace,()->{});
+        });
+    }
 
     //发起者检查接受者是否接受 适用于发起者发起学习之后
     private void checkIsAccepted(){
@@ -187,7 +215,16 @@ public class MainActivity extends AppCompatActivity {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(status -> {
+                            //todo 关闭这个!
                             mCheckAccepted.stop();
+                            String time  = status.getTime();
+                            String pattern = "([0-9])小时([0-9])分钟";
+                            Pattern p = Pattern.compile(pattern);
+                            Matcher matcher = p.matcher(time);
+                            while(matcher.find()){
+                                mPickHour = Integer.valueOf(matcher.group(1));
+                                mPickMinute = Integer.valueOf(matcher.group(2));
+                            }
                             transAppList();
                         },e->{int code = NetWorkUtils.getresponseCode(e);
                             if(code==404){
@@ -195,17 +232,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    //todo 两边都延迟5秒一定要获取app list
+    //todo 两边都延迟5秒一定要获取app list 明天检查这里!
     private void transAppList(){
         List<String> appLabelList  =
                 AppInfoUtils.getAppNames(AppInfoUtils.getAppInfos());
         
         RxFactory.getRetrofitService()
                 .postTranslist(new AppPick(App.userId,0,appLabelList))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .flatMap((Func1<Status, Observable<?>>)
                         status -> mBalanceTimer.onFinish(5))
-                .subscribe
-                        (o -> ScreenSaverActivity.start(MainActivity.this,mPickHour,mPickMinute));
+                .subscribe(o->{
+                    ScreenSaverActivity.start(MainActivity.this,mPickHour,mPickMinute);
+                    Date date = new Date(System.currentTimeMillis());
+                            SimpleDateFormat format = new SimpleDateFormat("HH.mm.ss秒");
+                            Log.d("fuck", format.format(date));
+                },
+                        Throwable::printStackTrace,()->{});
     }
 
 

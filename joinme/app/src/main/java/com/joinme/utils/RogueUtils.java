@@ -27,7 +27,8 @@ public class RogueUtils {
                 context.startService(intent);
 
                 Intent i1 = new Intent(Intent.ACTION_VIEW);
-                i1.setClassName(App.sAppPackagename,App.sAppPackagename+"."+ "ScreenSaverActivity");
+                i1.setClassName(App.sAppPackagename,
+                        App.sAppPackagename+"."+ "ScreenSaverActivity");
                 App.getContext().startActivity(i1);
             break;
         }

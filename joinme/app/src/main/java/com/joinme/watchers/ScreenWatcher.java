@@ -37,6 +37,7 @@ public class ScreenWatcher {
         }
     }
 
+
     private class UnlockScreenReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {

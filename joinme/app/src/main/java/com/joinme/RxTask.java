@@ -3,16 +3,16 @@ package com.joinme;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
+import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 
 //RxJava 的輪讯器
 public class RxTask {
 
     //interval
     private int milliscends;
-    private Action1 action1;
+    private Subscriber action1;
     private Subscription mSubscription= new Subscription() {
         boolean isUnsubscribed = false;
         @Override
@@ -24,7 +24,7 @@ public class RxTask {
             return isUnsubscribed;
         }
     };
-    public RxTask(int milliscends, Action1 action1){
+    public   RxTask(int milliscends, Subscriber action1){
         this.milliscends = milliscends;
         this.action1     = action1;
     }
@@ -32,6 +32,7 @@ public class RxTask {
     public void start(){
         if(mSubscription!=null||mSubscription.isUnsubscribed()){
             mSubscription = Observable.interval(milliscends, TimeUnit.MILLISECONDS)
+                    .filter(aLong -> !mSubscription.isUnsubscribed())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(action1);
         }
